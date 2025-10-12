@@ -1,6 +1,6 @@
 [project]
 name = "pdf-renamer"
-version = "0.2.0"
+version = "0.3.0"
 description = "Intelligent PDF renaming using LLMs"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -16,4 +16,7 @@ dependencies = [
 ]
 
 [project.scripts]
-pdf-renamer = "pdf_renamer.main:app"
+pdf-renamer = "pdf_renamer.main:cli"
+
+[tool.uv]
+package = true
