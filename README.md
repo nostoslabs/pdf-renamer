@@ -14,11 +14,13 @@ Intelligent PDF file renaming using LLMs. This tool analyzes PDF content and met
 
 - **Advanced PDF parsing** using docling-parse for better structure-aware extraction
 - **OCR fallback** for scanned PDFs with low text content
-- Uses OpenAI GPT-4o-mini for cost-efficient filename generation
+- **Smart LLM prompting** with multi-pass analysis for improved accuracy
 - Suggests filenames in format: `Author-Topic-Year.pdf`
 - Dry-run mode to preview changes before applying
 - **Enhanced interactive mode** with options to accept, manually edit, retry, or skip each file
-- Batch processing of multiple PDFs
+- **Live progress display** with concurrent processing for speed
+- **Configurable concurrency** limits for API calls and PDF extraction
+- Batch processing of multiple PDFs with optional output directory
 
 ## Setup
 
@@ -163,10 +165,12 @@ You can use interactive mode with `--dry-run` to preview without actually renami
 
 1. **Extract**: Uses docling-parse to read first 5 pages with structure-aware parsing, falls back to PyMuPDF if needed
 2. **OCR**: Automatically applies OCR for scanned PDFs with minimal text
-3. **Analyze**: Sends up to ~4500 characters to LLM with metadata and instructions
-4. **Suggest**: LLM returns filename in `Author-Topic-Year` format with confidence level
-5. **Interactive Review** (optional): User can accept, edit, retry, or skip each suggestion
-6. **Rename**: Applies suggestions (if not in dry-run mode)
+3. **Metadata Enhancement**: Extracts focused hints (years, emails, author sections) to supplement unreliable PDF metadata
+4. **Analyze**: Sends full content excerpt to LLM with enhanced metadata and detailed extraction instructions
+5. **Multi-pass Review**: Low-confidence results trigger a second analysis pass with focused prompts
+6. **Suggest**: LLM returns filename in `Author-Topic-Year` format with confidence level and reasoning
+7. **Interactive Review** (optional): User can accept, edit, retry, or skip each suggestion
+8. **Rename**: Applies suggestions (if not in dry-run mode)
 
 ## Cost Considerations
 
