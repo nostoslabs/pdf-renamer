@@ -47,17 +47,20 @@ You can use this tool in two ways:
 
 ### Option 1: Using `uvx` (Recommended - No Installation)
 
-Run the tool directly from the project directory without installation:
+Run the tool directly without installation:
 
 ```bash
 # Preview renames (dry-run mode)
-uvx --from . pdf-rename --dry-run /path/to/pdf/directory
+uvx pdf-renamer --dry-run /path/to/pdf/directory
 
 # Actually rename files
-uvx --from . pdf-rename --no-dry-run /path/to/pdf/directory
+uvx pdf-renamer --no-dry-run /path/to/pdf/directory
 
 # Interactive mode
-uvx --from . pdf-rename --interactive --no-dry-run /path/to/pdf/directory
+uvx pdf-renamer --interactive --no-dry-run /path/to/pdf/directory
+
+# Run from GitHub directly
+uvx https://github.com/nostoslabs/pdf-renamer --dry-run /path/to/pdf/directory
 ```
 
 ### Option 2: Using `uv run` (Development Mode)
@@ -84,40 +87,39 @@ uv run python -m pdf_renamer.main --no-dry-run /path/to/pdf/directory
 
 **Using OpenAI:**
 ```bash
-# Preview all PDFs in current directory (using uvx)
-uvx --from . pdf-rename --dry-run .
+# Preview all PDFs in current directory
+uvx pdf-renamer --dry-run .
 
-# Rename PDFs in specific directory (using uvx)
-uvx --from . pdf-rename --no-dry-run ~/Documents/Papers
+# Rename PDFs in specific directory
+uvx pdf-renamer --no-dry-run ~/Documents/Papers
 
 # Use a different OpenAI model
-uvx --from . pdf-rename --model gpt-4o --dry-run .
+uvx pdf-renamer --model gpt-4o --dry-run .
 ```
 
 **Using Ollama (or other local models):**
 ```bash
 # Using Ollama on patmos server with gemma model
-uvx --from . pdf-rename --url http://patmos:11434/v1 --model gemma3:latest --dry-run .
+uvx pdf-renamer --url http://patmos:11434/v1 --model gemma3:latest --dry-run .
 
 # Using local Ollama with qwen model
-uvx --from . pdf-rename --url http://localhost:11434/v1 --model qwen2.5 --dry-run .
+uvx pdf-renamer --url http://localhost:11434/v1 --model qwen2.5 --dry-run .
 
 # Set URL in environment and just use model flag
 export LLM_BASE_URL=http://patmos:11434/v1
-uvx --from . pdf-rename --model gemma3:latest --dry-run .
+uvx pdf-renamer --model gemma3:latest --dry-run .
 ```
 
 **Other examples:**
 ```bash
 # Process only specific files
-uvx --from . pdf-rename --pattern "*2020*.pdf" --dry-run .
+uvx pdf-renamer --pattern "*2020*.pdf" --dry-run .
 
 # Interactive mode with local model
-uvx --from . pdf-rename --url http://patmos:11434/v1 --model gemma3:latest --interactive --no-dry-run .
+uvx pdf-renamer --url http://patmos:11434/v1 --model gemma3:latest --interactive --no-dry-run .
 
-# From parent directory
-cd "/path/to/parent"
-uvx --from ./pdf-renamer pdf-rename --dry-run .
+# Run directly from GitHub
+uvx https://github.com/nostoslabs/pdf-renamer --no-dry-run ~/Documents/Papers
 ```
 
 ## How It Works

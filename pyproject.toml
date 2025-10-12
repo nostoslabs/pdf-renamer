@@ -13,4 +13,4 @@ dependencies = [
 ]
 
 [project.scripts]
-pdf-rename = "pdf_renamer.main:app"
+pdf-renamer = "pdf_renamer.main:app"

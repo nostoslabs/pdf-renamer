@@ -62,8 +62,8 @@ async def process_pdf(
         return (pdf_path, "", "error", str(e))
 
 
-@app.command()
-def rename(
+@app.callback(invoke_without_command=True)
+def main(
     directory: Annotated[
         Path,
         typer.Argument(help="Directory containing PDF files to rename")
