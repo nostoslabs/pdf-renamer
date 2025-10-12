@@ -61,28 +61,62 @@ class FilenameGenerator:
             output_type=SuggestedFilename,
             system_prompt="""You are an expert at creating concise, descriptive filenames for academic papers and technical documents.
 
-Your task is to analyze PDF metadata and content excerpts, then suggest a clear, descriptive filename.
+Your task is to analyze PDF content and suggest a clear, descriptive filename that accurately captures the document's identity.
 
-Guidelines:
-- Create filenames in the format: Author-Topic-Year (e.g., Smith-Kalman-Filtering-Applications-2020)
-- If multiple authors, use first author's last name only
-- Keep topic description informative and descriptive (3-6 words for clarity)
-- Always include year if available
-- Use hyphens to separate words (no spaces or underscores)
-- Keep total length under 80 characters if possible (can go longer if needed for clarity)
-- For well-known papers, use recognizable short forms
-- Only use information you can confirm from the content
-- If year is uncertain, omit it rather than guess
-- Prioritize clarity and searchability over brevity
+CRITICAL: PDF metadata (title, author, subject) is often UNRELIABLE or MISSING. Always prioritize what you find in the actual document text over metadata fields.
 
-Return high confidence only when you can clearly identify author, topic, and year.
-Return medium confidence if some elements are unclear but you can infer the topic.
-Return low confidence if the content is unclear or ambiguous.""",
+Filename Format: Author-Topic-Year
+Example: Smith-Neural-Networks-Deep-Learning-2020
+
+EXTRACTION STRATEGY:
+1. AUTHOR: Look for author names in these locations (in order of reliability):
+   - First page header/title area
+   - After the title (often in smaller font or with affiliations)
+   - Paper byline (e.g., "by John Smith" or "Authors: Smith et al.")
+   - Email addresses can help confirm author names
+   - If multiple authors, use ONLY the first author's last name
+   - IGNORE metadata author field if it conflicts with document text
+
+2. TOPIC/TITLE: Look for the main title in:
+   - Large text at top of first page (usually biggest font)
+   - Abstract section which often restates the title
+   - Running headers on subsequent pages
+   - Condense long titles to key terms (3-6 words)
+   - Remove generic words like "A Study of", "An Analysis of", "Introduction to"
+   - Keep domain-specific terminology intact
+
+3. YEAR: Look for publication year in:
+   - Copyright notice or footer on first page
+   - Date near title or author information
+   - Conference/journal citation info
+   - Page headers/footers
+   - ONLY include year if you find it clearly stated
+   - Do NOT guess or estimate years
+
+EXAMPLES OF GOOD FILENAMES:
+- Hinton-Deep-Learning-Review-2015
+- Vapnik-Support-Vector-Networks-1995
+- Goodfellow-Generative-Adversarial-Networks-2014
+- Hochreiter-Long-Short-Term-Memory-1997
+
+FORMATTING RULES:
+- Use hyphens between ALL words (no spaces or underscores)
+- Use title case for all words
+- Remove special characters: colons, quotes, commas, parentheses
+- Target 60-100 characters total (can be shorter or slightly longer if needed)
+- If title is very long, focus on the most distinctive/searchable terms
+
+CONFIDENCE LEVELS:
+- HIGH: You found author (first page), clear title, and year in the document text
+- MEDIUM: You found title and either author OR year, or title is very clear but other elements missing
+- LOW: Document text is unclear, heavily formatted, or you can only extract partial information
+
+IMPORTANT: When metadata contradicts document text, TRUST THE DOCUMENT TEXT. Explain your reasoning briefly.""",
         )
 
     @retry(
         stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10),
+        wait=wait_exponential(multiplier=2, min=4, max=30),
         retry=retry_if_exception_type((APIError, APIConnectionError, RateLimitError, APITimeoutError)),
         reraise=True
     )
@@ -95,6 +129,7 @@ Return low confidence if the content is unclear or ambiguous.""",
         """
         Generate a filename suggestion based on PDF content.
         Automatically retries up to 3 times on API errors with exponential backoff.
+        Also uses a multi-pass approach for low confidence results.
 
         Args:
             original_filename: Current filename
@@ -107,20 +142,60 @@ Return low confidence if the content is unclear or ambiguous.""",
         # Prepare context for the LLM
         context_parts = [f"Original filename: {original_filename}"]
 
+        # Add PDF metadata (if available, but note it may be unreliable)
         if metadata:
             if title := metadata.get("title"):
-                context_parts.append(f"PDF Title metadata: {title}")
+                context_parts.append(f"PDF Title metadata (may be unreliable): {title}")
             if author := metadata.get("author"):
-                context_parts.append(f"PDF Author metadata: {author}")
+                context_parts.append(f"PDF Author metadata (may be unreliable): {author}")
             if subject := metadata.get("subject"):
-                context_parts.append(f"PDF Subject metadata: {subject}")
+                context_parts.append(f"PDF Subject metadata (may be unreliable): {subject}")
 
-        context_parts.append(f"\nContent excerpt:\n{text_excerpt[:4500]}")
+            # Add focused metadata hints if available
+            if focused := metadata.get("focused"):
+                if year_hints := focused.get("year_hints"):
+                    context_parts.append(f"Years found in document: {', '.join(map(str, year_hints))}")
+                if email_hints := focused.get("email_hints"):
+                    context_parts.append(f"Email addresses found (often near authors): {', '.join(email_hints[:2])}")
+                if author_hints := focused.get("author_hints"):
+                    context_parts.append(f"Possible author sections:\n" + "\n".join(author_hints))
+                if header_text := focused.get("header_text"):
+                    context_parts.append(f"First 500 chars (likely title/author area):\n{header_text}")
+
+        # Send full extracted text to LLM
+        context_parts.append(f"\nFull content excerpt (first ~5 pages):\n{text_excerpt}")
 
         context = "\n".join(context_parts)
 
+        # First pass
         result = await self.agent.run(context)
-        return result.output
+        suggestion = result.output
+
+        # If confidence is low, try a second pass with more focused extraction
+        if suggestion.confidence.lower() == "low":
+            # Second pass: Focus on first 2 pages more carefully
+            first_pages = text_excerpt[:4000]  # Roughly first 2 pages
+
+            focused_context = f"""SECOND PASS - The initial analysis had low confidence. Please analyze more carefully.
+
+Original filename: {original_filename}
+
+FOCUS ON: The first few pages contain the most important metadata (title, author, year).
+Look VERY carefully at:
+1. The largest text on page 1 (this is usually the title)
+2. Text immediately after the title (usually authors and affiliations)
+3. Any dates, copyright notices, or publication info on page 1
+4. Headers and footers that might contain publication info
+
+First pages content:
+{first_pages}
+
+Please extract whatever information you can find with certainty. If you cannot find author or year, that's OK - just provide the best title you can determine."""
+
+            result = await self.agent.run(focused_context)
+            suggestion = result.output
+
+        return suggestion
 
     @staticmethod
     def sanitize_filename(filename: str) -> str:
