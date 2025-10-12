@@ -2,20 +2,24 @@
 
 import pymupdf
 import sys
+import re
 from pathlib import Path
 from docling_parse.pdf_parser import DoclingPdfParser
 from docling_core.types.doc.page import TextCellUnit
 
 
-def extract_pdf_text(pdf_path: Path, max_pages: int = 5, max_chars: int = 6000) -> str:
+def extract_pdf_text(pdf_path: Path, max_pages: int = 5, max_chars: int = 8000) -> str:
     """
     Extract text from the first few pages of a PDF using docling-parse.
     Falls back to PyMuPDF if docling-parse fails, with OCR support for scanned PDFs.
 
+    Reduced defaults for faster processing - first 5 pages with 8000 chars is usually
+    sufficient for filename generation (title, author, abstract typically on first 2 pages).
+
     Args:
         pdf_path: Path to the PDF file
-        max_pages: Maximum number of pages to extract (default: 5)
-        max_chars: Maximum characters to return (default: 6000)
+        max_pages: Maximum number of pages to extract (default: 5 for faster processing)
+        max_chars: Maximum characters to return (default: 8000 for reduced API load)
 
     Returns:
         Extracted text from the PDF
@@ -90,14 +94,14 @@ def extract_pdf_text(pdf_path: Path, max_pages: int = 5, max_chars: int = 6000) 
             raise RuntimeError(f"Failed to extract text from {pdf_path}: {e}, fallback also failed: {fallback_error}")
 
 
-def _extract_with_ocr(pdf_path: Path, max_pages: int = 5, max_chars: int = 6000) -> str:
+def _extract_with_ocr(pdf_path: Path, max_pages: int = 5, max_chars: int = 8000) -> str:
     """
     Extract text using OCR for scanned PDFs.
 
     Args:
         pdf_path: Path to the PDF file
-        max_pages: Maximum number of pages to extract
-        max_chars: Maximum characters to return
+        max_pages: Maximum number of pages to extract (default: 5)
+        max_chars: Maximum characters to return (default: 8000)
 
     Returns:
         Extracted text from OCR
@@ -158,4 +162,56 @@ def get_pdf_metadata(pdf_path: Path) -> dict:
         return metadata or {}
     except Exception as e:
         print(f"Warning: Failed to extract metadata from '{pdf_path.name}': {e}", file=sys.stderr)
+        return {}
+
+
+def extract_focused_metadata(pdf_path: Path) -> dict:
+    """
+    Extract focused metadata by analyzing the first few pages for common patterns.
+    This helps supplement unreliable PDF metadata.
+
+    Args:
+        pdf_path: Path to the PDF file
+
+    Returns:
+        Dictionary with extracted metadata hints (title_hints, author_hints, year_hints)
+    """
+    try:
+        doc = pymupdf.open(pdf_path)
+
+        # Extract first 2 pages with more detail
+        first_page_text = ""
+        if len(doc) > 0:
+            first_page_text = doc[0].get_text()
+
+        # Look for year patterns (1900-2099)
+        year_pattern = r'\b(19\d{2}|20\d{2})\b'
+        years = re.findall(year_pattern, first_page_text)
+
+        # Look for email addresses (often near author names)
+        email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        emails = re.findall(email_pattern, first_page_text)
+
+        # Extract first 500 chars (likely title and author area)
+        header_text = first_page_text[:500]
+
+        # Look for common author indicators
+        author_indicators = ['by ', 'author:', 'authors:', 'written by']
+        author_hints = []
+        for indicator in author_indicators:
+            if indicator in first_page_text.lower():
+                idx = first_page_text.lower().index(indicator)
+                # Extract ~100 chars after the indicator
+                author_hints.append(first_page_text[idx:idx+100])
+
+        doc.close()
+
+        return {
+            'header_text': header_text,
+            'year_hints': years[:3] if years else [],  # First 3 years found
+            'email_hints': emails[:3] if emails else [],  # First 3 emails found
+            'author_hints': author_hints[:2] if author_hints else []  # First 2 author sections
+        }
+    except Exception as e:
+        print(f"Warning: Failed to extract focused metadata from '{pdf_path.name}': {e}", file=sys.stderr)
         return {}
