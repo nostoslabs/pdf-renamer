@@ -3,7 +3,7 @@
 import shutil
 from pathlib import Path
 
-from pdf_renamer.domain.ports import FileRenamer
+from pdf_file_renamer.domain.ports import FileRenamer
 
 
 class RenameService(FileRenamer):

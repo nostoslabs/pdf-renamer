@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from pdf_renamer.domain.models import (
+from pdf_file_renamer.domain.models import (
     ConfidenceLevel,
     FilenameResult,
     FileRenameOperation,

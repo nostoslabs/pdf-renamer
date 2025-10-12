@@ -4,8 +4,8 @@ import asyncio
 from collections.abc import Callable
 from pathlib import Path
 
-from pdf_renamer.domain.models import FileRenameOperation
-from pdf_renamer.domain.ports import (
+from pdf_file_renamer.domain.models import FileRenameOperation
+from pdf_file_renamer.domain.ports import (
     FilenameGenerator,
     FileRenamer,
     PDFExtractor,

@@ -2,8 +2,8 @@
 
 import re
 
-from pdf_renamer.domain.models import FilenameResult, PDFContent
-from pdf_renamer.domain.ports import FilenameGenerator, LLMProvider
+from pdf_file_renamer.domain.models import FilenameResult, PDFContent
+from pdf_file_renamer.domain.ports import FilenameGenerator, LLMProvider
 
 
 class FilenameService(FilenameGenerator):

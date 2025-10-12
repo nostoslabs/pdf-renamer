@@ -9,19 +9,19 @@ import typer
 from rich.console import Console
 from rich.live import Live
 
-from pdf_renamer.application import (
+from pdf_file_renamer.application import (
     FilenameService,
     PDFRenameWorkflow,
     RenameService,
 )
-from pdf_renamer.infrastructure.config import Settings
-from pdf_renamer.infrastructure.llm import PydanticAIProvider
-from pdf_renamer.infrastructure.pdf import (
+from pdf_file_renamer.infrastructure.config import Settings
+from pdf_file_renamer.infrastructure.llm import PydanticAIProvider
+from pdf_file_renamer.infrastructure.pdf import (
     CompositePDFExtractor,
     DoclingPDFExtractor,
     PyMuPDFExtractor,
 )
-from pdf_renamer.presentation.formatters import (
+from pdf_file_renamer.presentation.formatters import (
     InteractivePrompt,
     ProgressDisplay,
     ResultsTable,

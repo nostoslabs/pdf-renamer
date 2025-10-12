@@ -2,14 +2,14 @@
 
 import pytest
 
-from pdf_renamer.application.filename_service import FilenameService
-from pdf_renamer.domain.models import (
+from pdf_file_renamer.application.filename_service import FilenameService
+from pdf_file_renamer.domain.models import (
     ConfidenceLevel,
     FilenameResult,
     PDFContent,
     PDFMetadata,
 )
-from pdf_renamer.domain.ports import LLMProvider
+from pdf_file_renamer.domain.ports import LLMProvider
 
 
 class MockLLMProvider(LLMProvider):

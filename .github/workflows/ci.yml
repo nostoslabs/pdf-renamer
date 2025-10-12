@@ -29,16 +29,16 @@ jobs:
         run: uv sync --all-extras
 
       - name: Run ruff linting
-        run: uv run ruff check pdf_renamer tests
+        run: uv run ruff check src/pdf_file_renamer tests
 
       - name: Run ruff formatting check
-        run: uv run ruff format --check pdf_renamer tests
+        run: uv run ruff format --check src/pdf_file_renamer tests
 
       - name: Run mypy type checking
-        run: uv run mypy pdf_renamer
+        run: uv run mypy src/pdf_file_renamer
 
       - name: Run tests with coverage
-        run: uv run pytest tests/ --cov=pdf_renamer --cov-report=xml --cov-report=term
+        run: uv run pytest tests/ --cov=pdf_file_renamer --cov-report=xml --cov-report=term
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

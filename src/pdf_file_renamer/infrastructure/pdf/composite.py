@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from pdf_renamer.domain.models import PDFContent
-from pdf_renamer.domain.ports import PDFExtractor
+from pdf_file_renamer.domain.models import PDFContent
+from pdf_file_renamer.domain.ports import PDFExtractor
 
 
 class CompositePDFExtractor(PDFExtractor):

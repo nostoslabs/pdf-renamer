@@ -6,8 +6,8 @@ from pathlib import Path
 from docling_core.types.doc.page import TextCellUnit
 from docling_parse.pdf_parser import DoclingPdfParser
 
-from pdf_renamer.domain.models import PDFContent, PDFMetadata
-from pdf_renamer.domain.ports import PDFExtractor
+from pdf_file_renamer.domain.models import PDFContent, PDFMetadata
+from pdf_file_renamer.domain.ports import PDFExtractor
 
 
 class DoclingPDFExtractor(PDFExtractor):

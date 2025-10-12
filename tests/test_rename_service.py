@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from pdf_renamer.application.rename_service import RenameService
+from pdf_file_renamer.application.rename_service import RenameService
 
 
 class TestRenameService:

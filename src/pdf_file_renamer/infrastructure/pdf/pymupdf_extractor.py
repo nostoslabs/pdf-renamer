@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pymupdf
 
-from pdf_renamer.domain.models import PDFContent, PDFMetadata
-from pdf_renamer.domain.ports import PDFExtractor
+from pdf_file_renamer.domain.models import PDFContent, PDFMetadata
+from pdf_file_renamer.domain.ports import PDFExtractor
 
 
 class PyMuPDFExtractor(PDFExtractor):

@@ -7,7 +7,7 @@ from rich.prompt import Prompt
 from rich.table import Table
 from rich.text import Text
 
-from pdf_renamer.domain.models import FileRenameOperation
+from pdf_file_renamer.domain.models import FileRenameOperation
 
 
 class ProgressDisplay:

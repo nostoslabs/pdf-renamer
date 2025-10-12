@@ -17,8 +17,8 @@ from tenacity import (
     wait_exponential,
 )
 
-from pdf_renamer.domain.models import ConfidenceLevel, FilenameResult
-from pdf_renamer.domain.ports import LLMProvider
+from pdf_file_renamer.domain.models import ConfidenceLevel, FilenameResult
+from pdf_file_renamer.domain.ports import LLMProvider
 
 # System prompt for filename generation
 FILENAME_GENERATION_PROMPT = """You are an expert at creating concise, descriptive filenames for academic papers and technical documents.

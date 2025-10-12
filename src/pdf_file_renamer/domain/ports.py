@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from pdf_renamer.domain.models import FilenameResult, PDFContent
+from pdf_file_renamer.domain.models import FilenameResult, PDFContent
 
 
 class PDFExtractor(ABC):
