@@ -1,6 +1,6 @@
 # PDF Renamer
 
-[![PyPI version](https://img.shields.io/pypi/v/pdf-renamer.svg)](https://pypi.org/project/pdf-renamer/)
+[![PyPI version](https://img.shields.io/pypi/v/pdf-file-renamer.svg)](https://pypi.org/project/pdf-file-renamer/)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![uv](https://img.shields.io/badge/uv-0.5+-orange.svg)](https://docs.astral.sh/uv/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -41,10 +41,10 @@ uvx pdf-renamer --dry-run /path/to/pdfs
 
 ```bash
 # Using pip
-pip install pdf-renamer
+pip install pdf-file-renamer
 
 # Using uv
-uv pip install pdf-renamer
+uv pip install pdf-file-renamer
 ```
 
 ### Install from Source

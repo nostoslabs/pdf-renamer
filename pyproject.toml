@@ -1,6 +1,6 @@
 [project]
-name = "pdf-renamer"
-version = "0.4.1"
+name = "pdf-file-renamer"
+version = "0.4.2"
 description = "Intelligent PDF renaming using LLMs"
 readme = "README.md"
 requires-python = ">=3.11"
