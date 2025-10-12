@@ -6,6 +6,8 @@ from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.openai import OpenAIProvider
 from openai import AsyncOpenAI
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from openai import APIError, APIConnectionError, RateLimitError, APITimeoutError
 import re
 
 
@@ -62,21 +64,28 @@ class FilenameGenerator:
 Your task is to analyze PDF metadata and content excerpts, then suggest a clear, descriptive filename.
 
 Guidelines:
-- Create filenames in the format: Author-Topic-Year (e.g., Smith-Kalman-Filtering-2020)
+- Create filenames in the format: Author-Topic-Year (e.g., Smith-Kalman-Filtering-Applications-2020)
 - If multiple authors, use first author's last name only
-- Keep topic description concise but informative (2-4 words)
+- Keep topic description informative and descriptive (3-6 words for clarity)
 - Always include year if available
 - Use hyphens to separate words (no spaces or underscores)
-- Keep total length under 60 characters if possible
+- Keep total length under 80 characters if possible (can go longer if needed for clarity)
 - For well-known papers, use recognizable short forms
 - Only use information you can confirm from the content
 - If year is uncertain, omit it rather than guess
+- Prioritize clarity and searchability over brevity
 
 Return high confidence only when you can clearly identify author, topic, and year.
 Return medium confidence if some elements are unclear but you can infer the topic.
 Return low confidence if the content is unclear or ambiguous.""",
         )
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception_type((APIError, APIConnectionError, RateLimitError, APITimeoutError)),
+        reraise=True
+    )
     async def generate_filename(
         self,
         original_filename: str,
@@ -85,6 +94,7 @@ Return low confidence if the content is unclear or ambiguous.""",
     ) -> SuggestedFilename:
         """
         Generate a filename suggestion based on PDF content.
+        Automatically retries up to 3 times on API errors with exponential backoff.
 
         Args:
             original_filename: Current filename
@@ -105,7 +115,7 @@ Return low confidence if the content is unclear or ambiguous.""",
             if subject := metadata.get("subject"):
                 context_parts.append(f"PDF Subject metadata: {subject}")
 
-        context_parts.append(f"\nContent excerpt:\n{text_excerpt[:2000]}")
+        context_parts.append(f"\nContent excerpt:\n{text_excerpt[:4500]}")
 
         context = "\n".join(context_parts)
 

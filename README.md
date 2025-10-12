@@ -12,7 +12,8 @@ Intelligent PDF file renaming using LLMs. This tool analyzes PDF content and met
 
 ## Features
 
-- Extracts text and metadata from PDFs
+- **Advanced PDF parsing** using docling-parse for better structure-aware extraction
+- **OCR fallback** for scanned PDFs with low text content
 - Uses OpenAI GPT-4o-mini for cost-efficient filename generation
 - Suggests filenames in format: `Author-Topic-Year.pdf`
 - Dry-run mode to preview changes before applying
@@ -124,17 +125,18 @@ uvx https://github.com/nostoslabs/pdf-renamer --no-dry-run ~/Documents/Papers
 
 ## How It Works
 
-1. **Extract**: Reads first 3 pages and metadata from each PDF
-2. **Analyze**: Sends excerpt to LLM with instructions to generate filename
-3. **Suggest**: LLM returns filename in `Author-Topic-Year` format with confidence level
-4. **Rename**: Applies suggestions (if not in dry-run mode)
+1. **Extract**: Uses docling-parse to read first 5 pages with structure-aware parsing, falls back to PyMuPDF if needed
+2. **OCR**: Automatically applies OCR for scanned PDFs with minimal text
+3. **Analyze**: Sends up to ~4500 characters to LLM with metadata and instructions
+4. **Suggest**: LLM returns filename in `Author-Topic-Year` format with confidence level
+5. **Rename**: Applies suggestions (if not in dry-run mode)
 
 ## Cost Considerations
 
 **OpenAI:**
 - Uses `gpt-4o-mini` by default (very cost-effective)
-- Processes only first ~3000 characters per PDF
-- Typical cost: ~$0.001-0.002 per PDF
+- Processes first ~4500 characters per PDF
+- Typical cost: ~$0.001-0.003 per PDF
 
 **Ollama/Local Models:**
 - Completely free (runs on your hardware)
@@ -144,13 +146,13 @@ uvx https://github.com/nostoslabs/pdf-renamer --no-dry-run ~/Documents/Papers
 ## Filename Format
 
 The tool generates filenames in this format:
-- `Smith-Kalman-Filtering-2020.pdf`
-- `Adamy-Electronic-Warfare-Modeling.pdf`
+- `Smith-Kalman-Filtering-Applications-2020.pdf`
+- `Adamy-Electronic-Warfare-Modeling-Techniques.pdf`
 - `Blair-Monopulse-Processing-Unresolved-Targets.pdf`
 
 Guidelines:
 - First author's last name
-- 2-4 word topic description
+- 3-6 word topic description (prioritizes clarity over brevity)
 - Year (if identifiable)
 - Hyphens between words
-- Max 60 characters (preferred)
+- Target ~80 characters (can be longer if needed for clarity)

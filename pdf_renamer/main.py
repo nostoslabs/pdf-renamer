@@ -75,11 +75,11 @@ def main(
     model: Annotated[
         str,
         typer.Option("--model", help="Model to use (works with any OpenAI-compatible API)")
-    ] = "gpt-4o-mini",
+    ] = "llama3.2",
     url: Annotated[
         str | None,
-        typer.Option("--url", help="Custom base URL for OpenAI-compatible APIs (e.g., http://patmos:11434/v1)")
-    ] = None,
+        typer.Option("--url", help="Custom base URL for OpenAI-compatible APIs")
+    ] = "http://localhost:11434/v1",
     interactive: Annotated[
         bool,
         typer.Option("--interactive", "-i", help="Confirm each rename")
@@ -92,17 +92,11 @@ def main(
     """
     Rename PDF files in a directory using LLM-generated suggestions.
     """
-    # Check for API key (optional for custom URLs like local Ollama)
-    api_key = os.getenv("OPENAI_API_KEY")
-    base_url = url or os.getenv("LLM_BASE_URL")
+    # Use Ollama by default, or custom URL from env/CLI
+    base_url = url or os.getenv("LLM_BASE_URL", "http://localhost:11434/v1")
 
-    if not api_key and not base_url:
-        console.print(
-            "[red]Error: OPENAI_API_KEY not found in environment.[/red]\n"
-            "Please set it in a .env file or export it as an environment variable.\n"
-            "Alternatively, use --url for custom endpoints (API key optional)."
-        )
-        raise typer.Exit(1)
+    # API key is optional for local Ollama, but required for OpenAI
+    api_key = os.getenv("OPENAI_API_KEY")
 
     # Find PDF files
     pdf_files = sorted(directory.glob(pattern))
