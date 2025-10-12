@@ -1,10 +1,16 @@
 # PDF Renamer
 
+[![PyPI version](https://img.shields.io/pypi/v/pdf-renamer.svg)](https://pypi.org/project/pdf-renamer/)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![uv](https://img.shields.io/badge/uv-0.5+-orange.svg)](https://docs.astral.sh/uv/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![pydantic-ai](https://img.shields.io/badge/pydantic--ai-1.0+-green.svg)](https://ai.pydantic.dev/)
 [![GitHub](https://img.shields.io/badge/github-nostoslabs%2Fpdf--renamer-blue?logo=github)](https://github.com/nostoslabs/pdf-renamer)
+
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](https://github.com/nostoslabs/pdf-renamer)
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![Type checked: mypy](https://img.shields.io/badge/type%20checked-mypy-blue.svg)](http://mypy-lang.org/)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
 Intelligent PDF file renaming using LLMs. This tool analyzes PDF content and metadata to suggest descriptive, standardized filenames.
 
@@ -22,14 +28,37 @@ Intelligent PDF file renaming using LLMs. This tool analyzes PDF content and met
 - **Configurable concurrency** limits for API calls and PDF extraction
 - Batch processing of multiple PDFs with optional output directory
 
-## Setup
+## Installation
 
-1. Install dependencies using `uv`:
+### Quick Start (No Installation Required)
+
 ```bash
-cd pdf-renamer
+# Run directly with uvx
+uvx pdf-renamer --dry-run /path/to/pdfs
 ```
 
-2. Configure your LLM provider:
+### Install from PyPI
+
+```bash
+# Using pip
+pip install pdf-renamer
+
+# Using uv
+uv pip install pdf-renamer
+```
+
+### Install from Source
+
+```bash
+# Clone and install
+git clone https://github.com/nostoslabs/pdf-renamer.git
+cd pdf-renamer
+uv sync
+```
+
+## Configuration
+
+Configure your LLM provider:
 
 **Option A: OpenAI (Cloud)**
 ```bash
@@ -46,36 +75,27 @@ echo "LLM_BASE_URL=http://patmos:11434/v1" > .env
 
 ## Usage
 
-You can use this tool in two ways:
-
-### Option 1: Using `uvx` (Recommended - No Installation)
-
-Run the tool directly without installation:
+### Quick Start
 
 ```bash
 # Preview renames (dry-run mode)
-uvx pdf-renamer --dry-run /path/to/pdf/directory
+pdf-renamer --dry-run /path/to/pdf/directory
 
 # Actually rename files
-uvx pdf-renamer --no-dry-run /path/to/pdf/directory
+pdf-renamer --no-dry-run /path/to/pdf/directory
 
-# Interactive mode - review each file with options to accept/edit/retry/skip
-uvx pdf-renamer --interactive --no-dry-run /path/to/pdf/directory
-
-# Run from GitHub directly
-uvx https://github.com/nostoslabs/pdf-renamer --dry-run /path/to/pdf/directory
+# Interactive mode - review each file
+pdf-renamer --interactive --no-dry-run /path/to/pdf/directory
 ```
 
-### Option 2: Using `uv run` (Development Mode)
-
-If you're developing or modifying the code:
+### Using uvx (No Installation)
 
 ```bash
-# Preview renames
-uv run python -m pdf_renamer.main --dry-run /path/to/pdf/directory
+# Run directly without installing
+uvx pdf-renamer --dry-run /path/to/pdfs
 
-# Actually rename files
-uv run python -m pdf_renamer.main --no-dry-run /path/to/pdf/directory
+# Run from GitHub
+uvx https://github.com/nostoslabs/pdf-renamer --dry-run /path/to/pdfs
 ```
 
 ### Options

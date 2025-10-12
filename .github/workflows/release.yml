@@ -37,6 +37,13 @@ jobs:
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          uv run twine upload dist/*
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
@@ -51,12 +58,12 @@ jobs:
 
             ### Installation
 
-            ```bash
-            uvx pdf-renamer@${{ steps.get_version.outputs.VERSION }}
-            ```
-
-            or
-
+            **From PyPI:**
             ```bash
             pip install pdf-renamer==${{ steps.get_version.outputs.VERSION }}
+            ```
+
+            **Using uvx (no installation required):**
+            ```bash
+            uvx pdf-renamer@${{ steps.get_version.outputs.VERSION }}
             ```
