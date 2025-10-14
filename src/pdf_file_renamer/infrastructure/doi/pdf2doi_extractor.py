@@ -32,9 +32,7 @@ class PDF2DOIExtractor(DOIExtractor):
         try:
             # Run pdf2doi in executor to avoid blocking
             loop = asyncio.get_event_loop()
-            result = await loop.run_in_executor(
-                None, pdf2doi.pdf2doi, str(pdf_path)
-            )
+            result = await loop.run_in_executor(None, pdf2doi.pdf2doi, str(pdf_path))
 
             # pdf2doi returns a dict (not a list)
             if not result or not isinstance(result, dict):

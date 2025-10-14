@@ -214,9 +214,7 @@ class ResultsTable:
                 reasoning = reasoning[:100] + "..."
             # Handle both enum and string confidence
             conf_str = (
-                op.confidence.value
-                if isinstance(op.confidence, ConfidenceLevel)
-                else op.confidence
+                op.confidence.value if isinstance(op.confidence, ConfidenceLevel) else op.confidence
             )
             table.add_row(
                 op.original_path.name,
