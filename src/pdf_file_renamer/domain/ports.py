@@ -3,7 +3,24 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from pdf_file_renamer.domain.models import FilenameResult, PDFContent
+from pdf_file_renamer.domain.models import DOIMetadata, FilenameResult, PDFContent
+
+
+class DOIExtractor(ABC):
+    """Interface for DOI extraction and metadata lookup."""
+
+    @abstractmethod
+    async def extract_doi(self, pdf_path: Path) -> DOIMetadata | None:
+        """
+        Extract DOI from PDF and fetch metadata.
+
+        Args:
+            pdf_path: Path to the PDF file
+
+        Returns:
+            DOIMetadata if DOI found and validated, None otherwise
+        """
+        pass
 
 
 class PDFExtractor(ABC):

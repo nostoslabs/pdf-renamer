@@ -15,6 +15,7 @@ from pdf_file_renamer.application import (
     RenameService,
 )
 from pdf_file_renamer.infrastructure.config import Settings
+from pdf_file_renamer.infrastructure.doi import PDF2DOIExtractor
 from pdf_file_renamer.infrastructure.llm import PydanticAIProvider
 from pdf_file_renamer.infrastructure.pdf import (
     CompositePDFExtractor,
@@ -64,6 +65,9 @@ def create_workflow(settings: Settings) -> PDFRenameWorkflow:
         retry_max_wait=settings.retry_max_wait,
     )
 
+    # Create DOI extractor
+    doi_extractor = PDF2DOIExtractor()
+
     # Create application services
     filename_service = FilenameService(llm_provider)
     file_renamer = RenameService()
@@ -73,6 +77,7 @@ def create_workflow(settings: Settings) -> PDFRenameWorkflow:
         pdf_extractor=pdf_extractor,
         filename_generator=filename_service,
         file_renamer=file_renamer,
+        doi_extractor=doi_extractor,
         max_concurrent_api=settings.max_concurrent_api,
         max_concurrent_pdf=settings.max_concurrent_pdf,
     )

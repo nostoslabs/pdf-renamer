@@ -18,9 +18,11 @@ Intelligent PDF file renaming using LLMs. This tool analyzes PDF content and met
 
 ## Features
 
+- **DOI-based naming** - Automatically extracts DOI and fetches authoritative metadata for academic papers
 - **Advanced PDF parsing** using docling-parse for better structure-aware extraction
 - **OCR fallback** for scanned PDFs with low text content
 - **Smart LLM prompting** with multi-pass analysis for improved accuracy
+- **Hybrid approach** - Uses DOI metadata when available, falls back to LLM analysis for other documents
 - Suggests filenames in format: `Author-Topic-Year.pdf`
 - Dry-run mode to preview changes before applying
 - **Enhanced interactive mode** with options to accept, manually edit, retry, or skip each file
@@ -183,19 +185,44 @@ You can use interactive mode with `--dry-run` to preview without actually renami
 
 ## How It Works
 
-1. **Extract**: Uses docling-parse to read first 5 pages with structure-aware parsing, falls back to PyMuPDF if needed
-2. **OCR**: Automatically applies OCR for scanned PDFs with minimal text
-3. **Metadata Enhancement**: Extracts focused hints (years, emails, author sections) to supplement unreliable PDF metadata
-4. **Analyze**: Sends full content excerpt to LLM with enhanced metadata and detailed extraction instructions
-5. **Multi-pass Review**: Low-confidence results trigger a second analysis pass with focused prompts
-6. **Suggest**: LLM returns filename in `Author-Topic-Year` format with confidence level and reasoning
-7. **Interactive Review** (optional): User can accept, edit, retry, or skip each suggestion
-8. **Rename**: Applies suggestions (if not in dry-run mode)
+### Intelligent Hybrid Approach
+
+The tool uses a multi-strategy approach to generate accurate filenames:
+
+1. **DOI Detection** (for academic papers)
+   - Searches PDF for DOI identifiers using [pdf2doi](https://github.com/MicheleCotrufo/pdf2doi)
+   - If found, queries authoritative metadata (title, authors, year, journal)
+   - Generates filename with **very high confidence** from validated metadata
+   - **Saves API costs** - no LLM call needed for papers with DOIs
+
+2. **LLM Analysis** (fallback for non-academic PDFs)
+   - **Extract**: Uses docling-parse to read first 5 pages with structure-aware parsing, falls back to PyMuPDF if needed
+   - **OCR**: Automatically applies OCR for scanned PDFs with minimal text
+   - **Metadata Enhancement**: Extracts focused hints (years, emails, author sections) to supplement unreliable PDF metadata
+   - **Analyze**: Sends full content excerpt to LLM with enhanced metadata and detailed extraction instructions
+   - **Multi-pass Review**: Low-confidence results trigger a second analysis pass with focused prompts
+   - **Suggest**: LLM returns filename in `Author-Topic-Year` format with confidence level and reasoning
+
+3. **Interactive Review** (optional): User can accept, edit, retry, or skip each suggestion
+4. **Rename**: Applies suggestions (if not in dry-run mode)
+
+### Benefits of DOI Integration
+
+- **Accuracy**: DOI metadata is canonical and verified
+- **Speed**: Instant lookup vs. LLM processing time
+- **Cost**: Free DOI lookups save on API costs for academic papers
+- **Reliability**: Works even when PDF text extraction is poor
 
 ## Cost Considerations
 
-**OpenAI:**
+**DOI-based Naming (Academic Papers):**
+- **Completely free** - No API costs
+- **No LLM needed** - Direct metadata lookup
+- Works for most academic papers with embedded DOIs
+
+**OpenAI (Fallback):**
 - Uses `gpt-4o-mini` by default (very cost-effective)
+- Only called when DOI not found
 - Processes first ~4500 characters per PDF
 - Typical cost: ~$0.001-0.003 per PDF
 

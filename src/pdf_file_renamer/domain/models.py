@@ -10,10 +10,37 @@ from pydantic import BaseModel, Field
 class ConfidenceLevel(str, Enum):
     """Confidence level for filename suggestions."""
 
+    VERY_HIGH = "very_high"  # DOI-backed metadata
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
     ERROR = "error"
+
+
+@dataclass(frozen=True)
+class DOIMetadata:
+    """Metadata extracted from DOI lookup."""
+
+    doi: str
+    title: str | None = None
+    authors: list[str] | None = None
+    year: str | None = None
+    journal: str | None = None
+    publisher: str | None = None
+    raw_bibtex: str | None = None
+
+    @property
+    def first_author(self) -> str | None:
+        """Get the first author's last name."""
+        if not self.authors or len(self.authors) == 0:
+            return None
+        # Extract last name from first author (handles "Last, First" or "First Last" formats)
+        first = self.authors[0]
+        if "," in first:
+            return first.split(",")[0].strip()
+        # Assume last word is last name
+        parts = first.strip().split()
+        return parts[-1] if parts else None
 
 
 class FilenameResult(BaseModel):
@@ -56,6 +83,7 @@ class PDFContent:
     text: str
     metadata: PDFMetadata
     page_count: int
+    doi_metadata: DOIMetadata | None = None
 
 
 @dataclass
@@ -68,6 +96,7 @@ class FileRenameOperation:
     reasoning: str
     text_excerpt: str
     metadata: PDFMetadata
+    doi_metadata: DOIMetadata | None = None
 
     @property
     def new_filename(self) -> str:

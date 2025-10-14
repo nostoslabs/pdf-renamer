@@ -1,11 +1,13 @@
 """PDF rename workflow - orchestrates the complete process."""
 
 import asyncio
+import contextlib
 from collections.abc import Callable
 from pathlib import Path
 
 from pdf_file_renamer.domain.models import FileRenameOperation
 from pdf_file_renamer.domain.ports import (
+    DOIExtractor,
     FilenameGenerator,
     FileRenamer,
     PDFExtractor,
@@ -25,6 +27,7 @@ class PDFRenameWorkflow:
         pdf_extractor: PDFExtractor,
         filename_generator: FilenameGenerator,
         file_renamer: FileRenamer,
+        doi_extractor: DOIExtractor | None = None,
         max_concurrent_api: int = 3,
         max_concurrent_pdf: int = 10,
     ) -> None:
@@ -35,12 +38,14 @@ class PDFRenameWorkflow:
             pdf_extractor: PDF extraction service
             filename_generator: Filename generation service
             file_renamer: File renaming service
+            doi_extractor: Optional DOI extraction service
             max_concurrent_api: Maximum concurrent API calls
             max_concurrent_pdf: Maximum concurrent PDF extractions
         """
         self.pdf_extractor = pdf_extractor
         self.filename_generator = filename_generator
         self.file_renamer = file_renamer
+        self.doi_extractor = doi_extractor
         self.api_semaphore = asyncio.Semaphore(max_concurrent_api)
         self.pdf_semaphore = asyncio.Semaphore(max_concurrent_pdf)
 
@@ -62,17 +67,36 @@ class PDFRenameWorkflow:
         filename = pdf_path.name
 
         try:
+            # Try DOI extraction first (if extractor available)
+            doi_metadata = None
+            if self.doi_extractor:
+                if status_callback:
+                    status_callback(filename, {"status": "DOI Lookup", "stage": "🔍"})
+
+                # DOI extraction is optional, continue if it fails
+                with contextlib.suppress(Exception):
+                    doi_metadata = await self.doi_extractor.extract_doi(pdf_path)
+
             # Update status: extracting
             if status_callback:
-                status_callback(filename, {"status": "Extracting", "stage": "📄"})
+                status = "Extracting" if not doi_metadata else "Extracting (DOI found)"
+                status_callback(filename, {"status": status, "stage": "📄"})
 
             # Extract PDF content (with PDF semaphore to limit memory usage)
             async with self.pdf_semaphore:
                 content = await self.pdf_extractor.extract(pdf_path)
 
+            # Attach DOI metadata to content if found
+            if doi_metadata:
+                # Create new content with DOI metadata
+                from dataclasses import replace
+
+                content = replace(content, doi_metadata=doi_metadata)
+
             # Generate filename (with API semaphore to limit API load)
             if status_callback:
-                status_callback(filename, {"status": "Analyzing", "stage": "🤖"})
+                status = "Analyzing" if not doi_metadata else "Formatting (DOI-based)"
+                status_callback(filename, {"status": status, "stage": "🤖"})
 
             async with self.api_semaphore:
                 result = await self.filename_generator.generate(filename, content)
@@ -95,6 +119,7 @@ class PDFRenameWorkflow:
                 reasoning=result.reasoning,
                 text_excerpt=content.text,
                 metadata=content.metadata,
+                doi_metadata=content.doi_metadata,
             )
 
         except Exception as e:

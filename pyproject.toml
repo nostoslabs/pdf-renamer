@@ -1,6 +1,6 @@
 [project]
 name = "pdf-file-renamer"
-version = "0.5.0"
+version = "0.6.0"
 description = "Intelligent PDF renaming using LLMs"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -15,6 +15,7 @@ dependencies = [
     "rich>=14.2.0",
     "typer>=0.19.2",
     "tenacity>=9.0.0",
+    "pdf2doi>=1.7",
 ]
 
 [project.optional-dependencies]
@@ -96,6 +97,7 @@ module = [
     "docling_parse.*",
     "docling_core.*",
     "pydantic_ai.*",
+    "pdf2doi.*",
 ]
 ignore_missing_imports = true
 
