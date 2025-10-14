@@ -5,7 +5,7 @@ import contextlib
 from collections.abc import Callable
 from pathlib import Path
 
-from pdf_file_renamer.domain.models import FileRenameOperation
+from pdf_file_renamer.domain.models import ConfidenceLevel, FileRenameOperation
 from pdf_file_renamer.domain.ports import (
     DOIExtractor,
     FilenameGenerator,
@@ -103,12 +103,18 @@ class PDFRenameWorkflow:
 
             # Mark complete
             if status_callback:
+                # result.confidence is already a string due to use_enum_values=True
+                confidence_str = (
+                    result.confidence.value
+                    if isinstance(result.confidence, ConfidenceLevel)
+                    else result.confidence
+                )
                 status_callback(
                     filename,
                     {
                         "status": "Complete",
                         "stage": "✓",
-                        "confidence": result.confidence.value,
+                        "confidence": confidence_str,
                     },
                 )
 

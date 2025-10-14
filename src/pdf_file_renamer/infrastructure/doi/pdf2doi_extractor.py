@@ -31,15 +31,13 @@ class PDF2DOIExtractor(DOIExtractor):
         try:
             # Run pdf2doi in executor to avoid blocking
             loop = asyncio.get_event_loop()
-            results = await loop.run_in_executor(
+            result = await loop.run_in_executor(
                 None, pdf2doi.pdf2doi, str(pdf_path)
             )
 
-            if not results or len(results) == 0:
+            # pdf2doi returns a dict (not a list)
+            if not result or not isinstance(result, dict):
                 return None
-
-            # Get the first result
-            result = results[0]
 
             # Check if DOI was found
             identifier = result.get("identifier")
@@ -50,15 +48,51 @@ class PDF2DOIExtractor(DOIExtractor):
             if identifier_type.lower() not in ("doi", "arxiv"):
                 return None
 
-            # Extract metadata from validation_info (bibtex)
+            # Extract metadata from validation_info (JSON string from CrossRef API)
             validation_info = result.get("validation_info", "")
 
-            # Parse bibtex for metadata
-            title = self._extract_bibtex_field(validation_info, "title")
-            authors = self._extract_bibtex_authors(validation_info)
-            year = self._extract_bibtex_field(validation_info, "year")
-            journal = self._extract_bibtex_field(validation_info, "journal")
-            publisher = self._extract_bibtex_field(validation_info, "publisher")
+            # Parse JSON metadata
+            import json
+
+            metadata = {}
+            if validation_info:
+                try:
+                    metadata = json.loads(validation_info)
+                except json.JSONDecodeError:
+                    pass
+
+            # Extract title
+            title = metadata.get("title")
+
+            # Extract authors (list of dicts with 'given' and 'family' fields)
+            authors = None
+            if "author" in metadata:
+                author_list = metadata["author"]
+                authors = []
+                for author in author_list:
+                    if isinstance(author, dict):
+                        family = author.get("family", "")
+                        given = author.get("given", "")
+                        if family:
+                            full_name = f"{given} {family}".strip() if given else family
+                            authors.append(full_name)
+                if not authors:
+                    authors = None
+
+            # Extract year from published-online or published
+            year = None
+            for date_field in ["published-online", "published", "created"]:
+                if date_field in metadata and "date-parts" in metadata[date_field]:
+                    date_parts = metadata[date_field]["date-parts"]
+                    if date_parts and len(date_parts) > 0 and len(date_parts[0]) > 0:
+                        year = str(date_parts[0][0])
+                        break
+
+            # Extract journal (container-title)
+            journal = metadata.get("container-title")
+
+            # Extract publisher
+            publisher = metadata.get("publisher")
 
             return DOIMetadata(
                 doi=identifier,

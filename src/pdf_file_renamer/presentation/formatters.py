@@ -7,7 +7,7 @@ from rich.prompt import Prompt
 from rich.table import Table
 from rich.text import Text
 
-from pdf_file_renamer.domain.models import FileRenameOperation
+from pdf_file_renamer.domain.models import ConfidenceLevel, FileRenameOperation
 
 
 class ProgressDisplay:
@@ -146,7 +146,13 @@ class InteractivePrompt:
             info_text.append("Suggested: ", style="bold green")
             info_text.append(f"{operation.new_filename}\n", style="green")
             info_text.append("Confidence: ", style="bold yellow")
-            info_text.append(f"{operation.confidence.value}\n", style="yellow")
+            # Handle both enum and string confidence
+            conf_str = (
+                operation.confidence.value
+                if isinstance(operation.confidence, ConfidenceLevel)
+                else operation.confidence
+            )
+            info_text.append(f"{conf_str}\n", style="yellow")
             info_text.append("Reasoning: ", style="bold white")
             info_text.append(operation.reasoning, style="dim white")
 
@@ -206,10 +212,16 @@ class ResultsTable:
             reasoning = op.reasoning
             if len(reasoning) > 100:
                 reasoning = reasoning[:100] + "..."
+            # Handle both enum and string confidence
+            conf_str = (
+                op.confidence.value
+                if isinstance(op.confidence, ConfidenceLevel)
+                else op.confidence
+            )
             table.add_row(
                 op.original_path.name,
                 op.new_filename,
-                op.confidence.value,
+                conf_str,
                 reasoning,
             )
 
