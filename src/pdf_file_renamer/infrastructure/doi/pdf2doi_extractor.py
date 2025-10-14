@@ -1,6 +1,7 @@
 """DOI extraction using pdf2doi library."""
 
 import asyncio
+import contextlib
 import re
 from pathlib import Path
 
@@ -56,28 +57,26 @@ class PDF2DOIExtractor(DOIExtractor):
 
             metadata = {}
             if validation_info:
-                try:
+                with contextlib.suppress(json.JSONDecodeError):
                     metadata = json.loads(validation_info)
-                except json.JSONDecodeError:
-                    pass
 
             # Extract title
             title = metadata.get("title")
 
             # Extract authors (list of dicts with 'given' and 'family' fields)
-            authors = None
+            authors: list[str] | None = None
             if "author" in metadata:
                 author_list = metadata["author"]
-                authors = []
+                author_names: list[str] = []
                 for author in author_list:
                     if isinstance(author, dict):
                         family = author.get("family", "")
                         given = author.get("given", "")
                         if family:
                             full_name = f"{given} {family}".strip() if given else family
-                            authors.append(full_name)
-                if not authors:
-                    authors = None
+                            author_names.append(full_name)
+                if author_names:
+                    authors = author_names
 
             # Extract year from published-online or published
             year = None
