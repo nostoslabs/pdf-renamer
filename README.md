@@ -237,7 +237,8 @@ The tool uses a multi-strategy approach to generate accurate filenames:
 
 1. **DOI Detection** (for academic papers)
    - Searches PDF for DOI identifiers using [pdf2doi](https://github.com/MicheleCotrufo/pdf2doi)
-   - If found, queries authoritative metadata (title, authors, year, journal)
+   - **Validates DOI metadata** against PDF content to prevent citation DOI mismatches
+   - If found and validated, queries authoritative metadata (title, authors, year, journal)
    - Generates filename with **very high confidence** from validated metadata
    - **Saves API costs** - no LLM call needed for papers with DOIs
 

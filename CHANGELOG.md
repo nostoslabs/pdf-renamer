@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.3] - 2025-10-14
+
+### Fixed
+- Fixed critical bug where pdf2doi extracted DOIs from citations instead of the paper's own DOI
+- Added DOI validation to verify metadata matches PDF content before accepting DOI
+- Prevents incorrect naming when papers don't have their own DOI but cite other papers
+
+### Added
+- DOI metadata validation against PDF first page content
+- Title similarity checking using SequenceMatcher
+- Configurable validation thresholds for DOI matching
+- Fallback to LLM-based naming when DOI validation fails
+
+### Changed
+- DOI extraction now validates that extracted metadata matches the actual PDF content
+- Improved accuracy by rejecting citation DOIs that don't match the paper's title
+- DOI validation checks title area (first ~300 characters) instead of full document
+
 ## [0.6.2] - 2025-10-14
 
 ### Added
@@ -125,6 +143,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Confidence scoring for suggestions
 - Support for custom output directories
 
+[0.6.3]: https://github.com/nostoslabs/pdf-renamer/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/nostoslabs/pdf-renamer/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/nostoslabs/pdf-renamer/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/nostoslabs/pdf-renamer/compare/v0.5.0...v0.6.0

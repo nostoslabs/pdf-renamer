@@ -3,6 +3,7 @@
 import asyncio
 import contextlib
 import re
+from difflib import SequenceMatcher
 from pathlib import Path
 
 import pdf2doi
@@ -14,10 +15,18 @@ from pdf_file_renamer.domain.ports import DOIExtractor
 class PDF2DOIExtractor(DOIExtractor):
     """Extract DOI from PDF files using pdf2doi library."""
 
-    def __init__(self) -> None:
-        """Initialize the PDF2DOI extractor."""
+    def __init__(self, validate_match: bool = True, similarity_threshold: float = 0.3) -> None:
+        """
+        Initialize the PDF2DOI extractor.
+
+        Args:
+            validate_match: Whether to validate that DOI metadata matches PDF content
+            similarity_threshold: Minimum similarity score (0-1) for title validation
+        """
         # Suppress pdf2doi verbose output
         pdf2doi.config.set("verbose", False)
+        self.validate_match = validate_match
+        self.similarity_threshold = similarity_threshold
 
     async def extract_doi(self, pdf_path: Path) -> DOIMetadata | None:
         """
@@ -91,7 +100,7 @@ class PDF2DOIExtractor(DOIExtractor):
             # Extract publisher
             publisher = metadata.get("publisher")
 
-            return DOIMetadata(
+            doi_metadata = DOIMetadata(
                 doi=identifier,
                 title=title,
                 authors=authors,
@@ -100,6 +109,16 @@ class PDF2DOIExtractor(DOIExtractor):
                 publisher=publisher,
                 raw_bibtex=validation_info if validation_info else None,
             )
+
+            # Validate that the DOI metadata matches the PDF content
+            if self.validate_match:
+                # Extract first page text from PDF to check for title match
+                pdf_text = await self._extract_pdf_first_page(pdf_path)
+                if not self._validate_doi_matches_pdf(doi_metadata, pdf_text):
+                    # DOI doesn't match - likely a citation DOI, not the paper's DOI
+                    return None
+
+            return doi_metadata
 
         except Exception:
             # Silently fail - DOI extraction is opportunistic
@@ -158,3 +177,120 @@ class PDF2DOIExtractor(DOIExtractor):
         ]
 
         return authors if authors else None
+
+    async def _extract_pdf_first_page(self, pdf_path: Path) -> str:
+        """
+        Extract text from the first page of a PDF.
+
+        Args:
+            pdf_path: Path to PDF file
+
+        Returns:
+            Text from first page (empty string if extraction fails)
+        """
+        try:
+            import fitz  # PyMuPDF
+
+            loop = asyncio.get_event_loop()
+
+            def extract() -> str:
+                with fitz.open(pdf_path) as doc:
+                    if len(doc) > 0:
+                        return doc[0].get_text()
+                return ""
+
+            return await loop.run_in_executor(None, extract)
+        except Exception:
+            return ""
+
+    def _validate_doi_matches_pdf(self, doi_metadata: DOIMetadata, pdf_text: str) -> bool:
+        """
+        Validate that DOI metadata matches the PDF content.
+
+        This checks if the title from the DOI metadata appears in the PDF text
+        (particularly the first page, where the title should be).
+
+        Args:
+            doi_metadata: DOI metadata to validate
+            pdf_text: Text from PDF first page (not full document!)
+
+        Returns:
+            True if metadata appears to match PDF, False otherwise
+        """
+        if not doi_metadata.title or not pdf_text:
+            # If we can't validate, assume it's valid (fail open)
+            return True
+
+        # Normalize text for comparison
+        pdf_text_lower = pdf_text.lower()
+        title_lower = doi_metadata.title.lower()
+
+        # Check if the full title appears in the PDF text
+        if title_lower in pdf_text_lower:
+            return True
+
+        # Check similarity using SequenceMatcher on first ~300 chars (title area)
+        # Most paper titles appear in the first few hundred characters
+        title_area = pdf_text_lower[:300]
+        similarity = SequenceMatcher(None, title_lower, title_area).ratio()
+
+        if similarity >= self.similarity_threshold:
+            return True
+
+        # Check if significant words from title appear in the title area ONLY
+        # This prevents matching citation DOIs from the references section
+        title_words = self._extract_significant_words(title_lower)
+        if not title_words:
+            return True  # Can't validate, fail open
+
+        # Require at least 70% of significant words to appear in the title area
+        matches = sum(1 for word in title_words if word in title_area)
+        match_ratio = matches / len(title_words)
+
+        return match_ratio >= 0.7
+
+    def _extract_significant_words(self, text: str) -> list[str]:
+        """
+        Extract significant words from text (removing common words).
+
+        Args:
+            text: Input text
+
+        Returns:
+            List of significant words
+        """
+        # Common words to skip
+        stop_words = {
+            "a",
+            "an",
+            "the",
+            "and",
+            "or",
+            "but",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
+            "of",
+            "with",
+            "by",
+            "from",
+            "as",
+            "is",
+            "was",
+            "are",
+            "were",
+            "been",
+            "be",
+            "this",
+            "that",
+            "these",
+            "those",
+        }
+
+        # Extract words (alphanumeric only)
+        words = re.findall(r"\b\w+\b", text.lower())
+
+        # Filter stop words and short words
+        return [w for w in words if w not in stop_words and len(w) > 3]
