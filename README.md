@@ -31,6 +31,8 @@
 
 ## Quick Example
 
+![Demo](demo.gif)
+
 Transform messy filenames into clean, organized ones:
 
 ```
