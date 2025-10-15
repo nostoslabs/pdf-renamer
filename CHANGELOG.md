@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.2] - 2025-10-14
+
+### Added
+- Demo GIF showing pdf-renamer in action with live TUI
+- VHS recording infrastructure (demo.tape)
+- Automated demo creation scripts (create_demo_gif.py, record_demo.sh)
+- Comprehensive PyPI metadata and classifiers
+- Table of contents in README for better navigation
+- Architecture, Development, and Contributing sections in README
+- Project URLs for homepage, repository, issues, and changelog
+
+### Changed
+- Enhanced README with animated demo, better badges, and emoji icons
+- Improved PyPI discoverability with keywords and proper categorization
+- Updated description to highlight DOI-first approach and interactive mode
+
 ## [0.6.1] - 2025-10-14
 
 ### Fixed
@@ -109,6 +125,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Confidence scoring for suggestions
 - Support for custom output directories
 
+[0.6.2]: https://github.com/nostoslabs/pdf-renamer/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/nostoslabs/pdf-renamer/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/nostoslabs/pdf-renamer/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/nostoslabs/pdf-renamer/compare/v0.4.2...v0.5.0
