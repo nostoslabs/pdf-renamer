@@ -1,34 +1,78 @@
 # PDF Renamer
 
 [![PyPI version](https://img.shields.io/pypi/v/pdf-file-renamer.svg)](https://pypi.org/project/pdf-file-renamer/)
-[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![uv](https://img.shields.io/badge/uv-0.5+-orange.svg)](https://docs.astral.sh/uv/)
+[![PyPI downloads](https://img.shields.io/pypi/dm/pdf-file-renamer.svg)](https://pypi.org/project/pdf-file-renamer/)
+[![Python](https://img.shields.io/pypi/pyversions/pdf-file-renamer.svg)](https://pypi.org/project/pdf-file-renamer/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![pydantic-ai](https://img.shields.io/badge/pydantic--ai-1.0+-green.svg)](https://ai.pydantic.dev/)
-[![GitHub](https://img.shields.io/badge/github-nostoslabs%2Fpdf--renamer-blue?logo=github)](https://github.com/nostoslabs/pdf-renamer)
-
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](https://github.com/nostoslabs/pdf-renamer)
-[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![CI](https://github.com/nostoslabs/pdf-renamer/workflows/CI/badge.svg)](https://github.com/nostoslabs/pdf-renamer/actions)
+[![Code style: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Type checked: mypy](https://img.shields.io/badge/type%20checked-mypy-blue.svg)](http://mypy-lang.org/)
-[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-Intelligent PDF file renaming using LLMs. This tool analyzes PDF content and metadata to suggest descriptive, standardized filenames.
+**Intelligent PDF file renaming using LLMs and DOI metadata.** Automatically generate clean, descriptive filenames for your PDF library.
 
 > 🚀 Works with **OpenAI**, **Ollama**, **LM Studio**, and any OpenAI-compatible API
+> 📚 **DOI-first** approach for academic papers - no API costs!
+> 🎯 **Interactive mode** with retry, edit, and skip options
+
+## Table of Contents
+
+- [Quick Example](#quick-example)
+- [Features](#features)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Usage](#usage)
+- [Interactive Mode](#interactive-mode)
+- [How It Works](#how-it-works)
+- [Cost Considerations](#cost-considerations)
+- [Architecture](#architecture)
+- [Development](#development)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Quick Example
+
+Transform messy filenames into clean, organized ones:
+
+```
+Before:                               After:
+📄 paper_final_v3.pdf          →     Leroux-Analog-In-memory-Computing-2025.pdf
+📄 download (2).pdf            →     Ruiz-Why-Don-Trace-Requirements-2023.pdf
+📄 document.pdf                →     Raspail-Camp_of_the_Saints.pdf
+```
+
+**Live Progress Display:**
+```
+Processing 3 PDFs with max 3 concurrent API calls and 10 concurrent extractions
+
+╭─────────────────────────── 📊 Progress ───────────────────────────╮
+│ Total: 3 | Pending: 0 | Extracting: 0 | Analyzing: 0 | Complete: 3 │
+╰───────────────────────────────────────────────────────────────────╯
+╭───────────────────────────────────────────────────────────────────╮
+│ [██████████████████████████████████████████████] 100.0%           │
+╰───────────────────────────────────────────────────────────────────╯
+                          Processing Status
+┏━━━━━━━━━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┓
+┃ File               ┃ Stage ┃ Status   ┃ Details             ┃
+┡━━━━━━━━━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━┩
+│ paper_final_v3.pdf │   ✓   │ Complete │ very_high           │
+│ download (2).pdf   │   ✓   │ Complete │ very_high (DOI)     │
+│ document.pdf       │   ✓   │ Complete │ high                │
+└────────────────────┴───────┴──────────┴─────────────────────┘
+```
 
 ## Features
 
-- **DOI-based naming** - Automatically extracts DOI and fetches authoritative metadata for academic papers
-- **Advanced PDF parsing** using docling-parse for better structure-aware extraction
-- **OCR fallback** for scanned PDFs with low text content
-- **Smart LLM prompting** with multi-pass analysis for improved accuracy
-- **Hybrid approach** - Uses DOI metadata when available, falls back to LLM analysis for other documents
-- Suggests filenames in format: `Author-Topic-Year.pdf`
-- Dry-run mode to preview changes before applying
-- **Enhanced interactive mode** with options to accept, manually edit, retry, or skip each file
-- **Live progress display** with concurrent processing for speed
-- **Configurable concurrency** limits for API calls and PDF extraction
-- Batch processing of multiple PDFs with optional output directory
+- **🎓 DOI-based naming** - Automatically extracts DOI and fetches authoritative metadata for academic papers
+- **🧠 Advanced PDF parsing** using docling-parse for better structure-aware extraction
+- **👁️ OCR fallback** for scanned PDFs with low text content
+- **🎯 Smart LLM prompting** with multi-pass analysis for improved accuracy
+- **⚡ Hybrid approach** - Uses DOI metadata when available, falls back to LLM analysis for other documents
+- **📝 Standardized format** - Generates filenames like `Author-Topic-Year.pdf`
+- **🔍 Dry-run mode** to preview changes before applying
+- **💬 Enhanced interactive mode** with options to accept, manually edit, retry, or skip each file
+- **📊 Live progress display** with concurrent processing for speed
+- **⚙️ Configurable concurrency** limits for API calls and PDF extraction
+- **📦 Batch processing** of multiple PDFs with optional output directory
 
 ## Installation
 
@@ -244,3 +288,106 @@ Guidelines:
 - Year (if identifiable)
 - Hyphens between words
 - Target ~80 characters (can be longer if needed for clarity)
+
+## Architecture
+
+This project follows **Clean Architecture** principles with clear separation of concerns:
+
+```
+src/pdf_file_renamer/
+├── domain/          # Core business logic (models, ports)
+├── application/     # Use cases and workflows
+├── infrastructure/  # External integrations (PDF, LLM, DOI)
+└── presentation/    # CLI and UI components
+```
+
+**Key Design Patterns:**
+- **Ports and Adapters** - Clean interfaces for external dependencies
+- **Dependency Injection** - Flexible component composition
+- **Single Responsibility** - Each module has one clear purpose
+- **Type Safety** - Full mypy strict mode compliance
+
+See [REFACTORING_SUMMARY.md](REFACTORING_SUMMARY.md) for detailed architecture notes.
+
+## Development
+
+### Setup
+
+```bash
+# Clone repository
+git clone https://github.com/nostoslabs/pdf-renamer.git
+cd pdf-renamer
+
+# Install dependencies with uv
+uv sync
+
+# Run tests
+uv run pytest
+
+# Run linting
+uv run ruff check src/ tests/
+
+# Run type checking
+uv run mypy src/
+```
+
+### Code Quality
+
+- **Tests**: pytest with async support and coverage reporting
+- **Linting**: ruff for fast, comprehensive linting
+- **Formatting**: ruff format for consistent code style
+- **Type Checking**: mypy in strict mode
+- **CI/CD**: GitHub Actions for automated testing and releases
+
+### Running Locally
+
+```bash
+# Run with local changes
+uv run pdf-file-renamer --dry-run /path/to/pdfs
+
+# Run specific module
+uv run python -m pdf_file_renamer.main --help
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+### Development Workflow
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run tests and linting (`uv run pytest && uv run ruff check src/`)
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+### Code Style
+
+- Follow PEP 8 (enforced by ruff)
+- Use type hints for all functions
+- Write tests for new features
+- Update documentation as needed
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- [pdf2doi](https://github.com/MicheleCotrufo/pdf2doi) for DOI extraction
+- [pydantic-ai](https://ai.pydantic.dev/) for LLM integration
+- [docling-parse](https://github.com/DS4SD/docling-parse) for advanced PDF parsing
+- [PyMuPDF](https://pymupdf.readthedocs.io/) for PDF text extraction
+- [rich](https://rich.readthedocs.io/) for beautiful terminal UI
+
+## Support
+
+- **Issues**: [GitHub Issues](https://github.com/nostoslabs/pdf-renamer/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/nostoslabs/pdf-renamer/discussions)
+- **Changelog**: [CHANGELOG.md](CHANGELOG.md)
+
+---
+
+**Made with ❤️ by [Nostos Labs](https://github.com/nostoslabs)**
